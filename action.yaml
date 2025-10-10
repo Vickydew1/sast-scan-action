@@ -152,7 +152,6 @@ runs:
         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
       run: |
-        run: |
         set -e
 
         # Softfail
