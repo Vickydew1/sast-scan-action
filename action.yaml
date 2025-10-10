@@ -1,135 +1,39 @@
-# name: "AccuKnox SQ-SAST Scanner"
-# description: "Run SonarQube-based SAST scan and upload results to AccuKnox Panel."
-
-# branding: 
-#   icon: "shield" 
-#   color: "purple"
-
-# inputs:
-#   skip_sonar_scan:
-#     description: 'Whether to skip the SonarQube scan.'
-#     required: false
-#     default: 'false'
-#   sonar_project_key:
-#     description: 'SonarQube project key'
-#     required: true
-#   sonar_organization_id:
-#     description: 'SonarQube organization ID (cloud only)'
-#     required: false
-#   sonar_token:
-#     description: 'SonarQube authentication token'
-#     required: true
-#   sonar_host_url:
-#     description: 'SonarQube host URL'
-#     required: true
-#   soft_fail:
-#     description: 'Do not fail the pipeline if scan finds issues'
-#     required: false
-#     default: 'false'
-#   accuknox_endpoint:
-#     description: 'AccuKnox CSPM panel endpoint URL'
-#     required: true
-#   accuknox_token:
-#     description: 'AccuKnox authentication token'
-#     required: true
-#   accuknox_label:
-#     description: 'Label for associating scan results in AccuKnox'
-#     required: true
-
-# runs:
-#   using: "composite"
-#   steps:
-#     - name: Run AccuKnox SQ-SAST Scan
-#       shell: bash
-#       env:
-#         SKIP_SONAR_SCAN: ${{ inputs.skip_sonar_scan }}
-#         SONAR_PROJECT_KEY: ${{ inputs.sonar_project_key }}
-#         SONAR_ORG_ID: ${{ inputs.sonar_organization_id }}
-#         SONAR_TOKEN: ${{ inputs.sonar_token }}
-#         SONAR_HOST_URL: ${{ inputs.sonar_host_url }}
-#         SOFT_FAIL: ${{ inputs.soft_fail }}
-#         ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
-#         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
-#         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
-#       run: |
-#         SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
-#         SOFT_FAIL_ARG=""
-#         if [ "$SOFT_FAIL" = "true" ]; then
-#           SOFT_FAIL_ARG="--softfail"
-#         fi
-
-#         echo "Downloading AccuKnox ASPM Scanner..."
-#         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
-#         chmod +x accuknox-aspm-scanner
-
-#         # Build SonarQube command string
-#         CMD_ARGS="-Dsonar.projectKey=$SONAR_PROJECT_KEY \
-#         -Dsonar.token=$SONAR_TOKEN \
-#         -Dsonar.host.url=$SONAR_HOST_URL \
-#         -Dsonar.qualitygate.wait=true"
-
-#         [ -n "$SONAR_ORG_ID" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=$SONAR_ORG_ID"
-#         [ "$SKIP_SONAR_SCAN" = "true" ] && CMD_ARGS="--skip-sonar-scan $CMD_ARGS"
-
-#         # Run the scanner (AccuKnox env variables now used instead of CLI args)
-#         echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG sq-sast --command \"$CMD_ARGS\" --repo-url \"$GITHUB_REPOSITORY\" --branch \"${GITHUB_REF#refs/heads/}\" --commit-sha \"$GITHUB_SHA\" --pipeline-url \"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID\" --container-mode"
-#         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG sq-sast --command "$CMD_ARGS" \
-#           --repo-url "$GITHUB_REPOSITORY" \
-#           --branch "${GITHUB_REF#refs/heads/}" \
-#           --commit-sha "$GITHUB_SHA" \
-#           --pipeline-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
-#           --container-mode
-
-
 name: "AccuKnox SQ-SAST Scanner"
 description: "Run SonarQube-based SAST scan and upload results to AccuKnox Panel."
 
-branding:
-  icon: "shield"
+branding: 
+  icon: "shield" 
   color: "purple"
 
 inputs:
   skip_sonar_scan:
-    description: "Flag to skip the SonarQube scan."
+    description: 'Whether to skip the SonarQube scan.'
     required: false
-    default: "false"
+    default: 'false'
   sonar_project_key:
-    description: "SonarQube project key (required)"
+    description: 'SonarQube project key'
     required: true
+  sonar_org_id:
+    description: 'SonarQube organisation ID (cloud only)'
+    required: false
   sonar_token:
-    description: "SonarQube authentication token (required)"
+    description: 'SonarQube authentication token'
     required: true
   sonar_host_url:
-    description: "SonarQube host URL (required)"
+    description: 'SonarQube host URL'
     required: true
-  sonar_organization_id:
-    description: "SonarQube organization ID (optional)"
-    required: false
-  repo_url:
-    description: "Git repository URL (auto-detected if not provided)"
-    required: false
-  branch:
-    description: "Git branch to scan (auto-detected if not provided)"
-    required: false
-  commit_sha:
-    description: "Commit SHA for the scan (auto-detected if not provided)"
-    required: false
-  pipeline_url:
-    description: "Pipeline URL where the scan is triggered (auto-detected if not provided)"
-    required: false
-    default: ""
   soft_fail:
-    description: "Do not fail the pipeline if issues are found"
+    description: 'Do not fail the pipeline if scan finds issues'
     required: false
-    default: "false"
+    default: 'false'
   accuknox_endpoint:
-    description: "AccuKnox CSPM panel endpoint URL"
+    description: 'AccuKnox CSPM panel endpoint URL'
     required: true
   accuknox_token:
-    description: "AccuKnox authentication token"
+    description: 'AccuKnox authentication token'
     required: true
   accuknox_label:
-    description: "Label for associating scan results in AccuKnox"
+    description: 'Label for associating scan results in AccuKnox'
     required: true
 
 runs:
@@ -137,40 +41,41 @@ runs:
   steps:
     - name: Run AccuKnox SQ-SAST Scan
       shell: bash
+      env:
+        SKIP_SONAR_SCAN: ${{ inputs.skip_sonar_scan }}
+        SONAR_PROJECT_KEY: ${{ inputs.sonar_project_key }}
+        SONAR_ORG_ID: ${{ inputs.sonar_org_id }}
+        SONAR_TOKEN: ${{ inputs.sonar_token }}
+        SONAR_HOST_URL: ${{ inputs.sonar_host_url }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
+        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
+        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
       run: |
-        set -e
-
-        # Soft-fail argument
+        SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
         SOFT_FAIL_ARG=""
-        [ "${{ inputs.soft_fail }}" = "true" ] && SOFT_FAIL_ARG="--softfail"
+        if [ "$SOFT_FAIL" = "true" ]; then
+          SOFT_FAIL_ARG="--softfail"
+        fi
 
-        # Skip Sonar scan argument
-        SCAN_SKIP_ARG=""
-        [ "${{ inputs.skip_sonar_scan }}" = "true" ] && SCAN_SKIP_ARG="--skip-sonar-scan"
+        echo "Downloading AccuKnox ASPM Scanner..."
+        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+        chmod +x accuknox-aspm-scanner
 
-        # Download scanner
-        SCANNER="/tmp/accuknox-aspm-scanner"
-        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o $SCANNER
-        chmod +x $SCANNER
+        # Build SonarQube command string
+        CMD_ARGS="-Dsonar.projectKey=$SONAR_PROJECT_KEY \
+        -Dsonar.token=$SONAR_TOKEN \
+        -Dsonar.host.url=$SONAR_HOST_URL \
+        -Dsonar.qualitygate.wait=true"
 
-        # Auto-detect Git info if not provided
-        REPO_URL="${{ inputs.repo_url }}"
-        [ -z "$REPO_URL" ] && REPO_URL="$GITHUB_REPOSITORY"
+        [ -n "$SONAR_ORG_ID" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=$SONAR_ORG_ID"
+        [ "$SKIP_SONAR_SCAN" = "true" ] && CMD_ARGS="--skip-sonar-scan $CMD_ARGS"
 
-        BRANCH="${{ inputs.branch }}"
-        [ -z "$BRANCH" ] && BRANCH="${GITHUB_REF#refs/heads/}"
-
-        COMMIT_SHA="${{ inputs.commit_sha }}"
-        [ -z "$COMMIT_SHA" ] && COMMIT_SHA="$GITHUB_SHA"
-
-        PIPELINE_URL="${{ inputs.pipeline_url }}"
-        [ -z "$PIPELINE_URL" ] && PIPELINE_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-
-        # Build SonarQube command
-        CMD_ARGS="-Dsonar.projectKey=${{ inputs.sonar_project_key }} -Dsonar.login=${{ inputs.sonar_token }} -Dsonar.host.url=${{ inputs.sonar_host_url }} -Dsonar.qualitygate.wait=true"
-        [ -n "${{ inputs.sonar_organization_id }}" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=${{ inputs.sonar_organization_id }}"
-
-        echo "Running AccuKnox SQ-SAST Scanner..."
-        echo "$SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG --command \"$CMD_ARGS\" --repo-url \"$REPO_URL\" --branch \"$BRANCH\" --commit-sha \"$COMMIT_SHA\" --pipeline-url \"$PIPELINE_URL\" --container-mode"
-
-        $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG --command "$CMD_ARGS" --repo-url "$REPO_URL"
+        # Run the scanner (AccuKnox env variables now used instead of CLI args)
+        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG sq-sast --command \"$CMD_ARGS\" --repo-url \"$GITHUB_REPOSITORY\" --branch \"${GITHUB_REF#refs/heads/}\" --commit-sha \"$GITHUB_SHA\" --pipeline-url \"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID\" --container-mode"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG sq-sast --command "$CMD_ARGS" \
+          --repo-url "$GITHUB_REPOSITORY" \
+          --branch "${GITHUB_REF#refs/heads/}" \
+          --commit-sha "$GITHUB_SHA" \
+          --pipeline-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+          --container-mode
