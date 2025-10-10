@@ -90,23 +90,36 @@ branding:
 
 inputs:
   skip_sonar_scan:
-    description: "Whether to skip the SonarQube scan."
+    description: "Flag to skip the SonarQube scan."
     required: false
     default: "false"
   sonar_project_key:
-    description: "SonarQube project key"
+    description: "SonarQube project key (required)"
     required: true
-  sonar_organization_id:
-    description: "SonarQube organization ID (optional)"
-    required: false
   sonar_token:
-    description: "SonarQube authentication token"
+    description: "SonarQube authentication token (required)"
     required: true
   sonar_host_url:
-    description: "SonarQube host URL"
+    description: "SonarQube host URL (required)"
     required: true
+  sonar_org_id:
+    description: "SonarQube organization ID (optional)"
+    required: false
+  repo_url:
+    description: "Git repository URL (auto-detected if not provided)"
+    required: false
+  branch:
+    description: "Git branch to scan (auto-detected if not provided)"
+    required: false
+  commit_sha:
+    description: "Commit SHA for the scan (auto-detected if not provided)"
+    required: false
+  pipeline_url:
+    description: "URL of the pipeline triggering this scan"
+    required: false
+    default: ""
   soft_fail:
-    description: "Do not fail the pipeline if scan finds issues"
+    description: "Do not fail pipeline if issues are found"
     required: false
     default: "false"
   accuknox_endpoint:
@@ -118,19 +131,6 @@ inputs:
   accuknox_label:
     description: "Label for associating scan results in AccuKnox"
     required: true
-  repo_url:
-    description: "Git repository URL (auto-detected if not provided)"
-    required: false
-  branch:
-    description: "Git branch to scan (auto-detected if not provided)"
-    required: false
-  commit_sha:
-    description: "Commit SHA for the scan (auto-detected if not provided)"
-    required: false
-  pipeline_url:
-    description: "Pipeline URL triggering this scan"
-    required: false
-    default: ""
 
 runs:
   using: "composite"
@@ -140,17 +140,17 @@ runs:
       env:
         SKIP_SONAR_SCAN: ${{ inputs.skip_sonar_scan }}
         SONAR_PROJECT_KEY: ${{ inputs.sonar_project_key }}
-        SONAR_ORG_ID: ${{ inputs.sonar_organization_id }}
         SONAR_TOKEN: ${{ inputs.sonar_token }}
         SONAR_HOST_URL: ${{ inputs.sonar_host_url }}
-        SOFT_FAIL: ${{ inputs.soft_fail }}
-        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
-        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
-        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
+        SONAR_ORG_ID: ${{ inputs.sonar_org_id }}
         REPO_URL: ${{ inputs.repo_url }}
         BRANCH: ${{ inputs.branch }}
         COMMIT_SHA: ${{ inputs.commit_sha }}
         PIPELINE_URL: ${{ inputs.pipeline_url }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
+        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
+        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
       run: |
         set -e
 
@@ -163,7 +163,7 @@ runs:
         SCAN_SKIP_ARG=""
         [ "$SKIP_SONAR_SCAN" = "true" ] && SCAN_SKIP_ARG="--skip-sonar-scan"
 
-        # Download AccuKnox Scanner
+        # Download AccuKnox ASPM Scanner
         SCANNER="/tmp/accuknox-aspm-scanner"
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o $SCANNER
         chmod +x $SCANNER
@@ -179,11 +179,10 @@ runs:
         -Dsonar.login=$SONAR_TOKEN \
         -Dsonar.host.url=$SONAR_HOST_URL \
         -Dsonar.qualitygate.wait=true"
-
         [ -n "$SONAR_ORG_ID" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=$SONAR_ORG_ID"
 
+        # Run the scanner
         echo "Running: $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG --command \"$CMD_ARGS\" --repo-url \"$REPO_URL\" --branch \"$BRANCH\" --commit-sha \"$COMMIT_SHA\" --pipeline-url \"$PIPELINE_URL\" --container-mode"
-
         $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG \
           --command "$CMD_ARGS" \
           --repo-url "$REPO_URL" \
@@ -191,3 +190,4 @@ runs:
           --commit-sha "$COMMIT_SHA" \
           --pipeline-url "$PIPELINE_URL" \
           --container-mode
+
