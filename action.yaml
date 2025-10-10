@@ -138,19 +138,31 @@ runs:
     - name: Run AccuKnox SQ-SAST Scan
       shell: bash
       env:
+        SKIP_SONAR_SCAN: ${{ inputs.skip_sonar_scan }}
+        SONAR_PROJECT_KEY: ${{ inputs.sonar_project_key }}
+        SONAR_TOKEN: ${{ inputs.sonar_token }}
+        SONAR_HOST_URL: ${{ inputs.sonar_host_url }}
+        SONAR_ORG_ID: ${{ inputs.sonar_org_id }}
+        REPO_URL: ${{ inputs.repo_url }}
+        BRANCH: ${{ inputs.branch }}
+        COMMIT_SHA: ${{ inputs.commit_sha }}
+        PIPELINE_URL: ${{ inputs.pipeline_url }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
+        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
+        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
         DEBUG: "TRUE"
       run: |
         set -e
 
-        # Soft-fail argument
-        SOFT_FAIL="${{ inputs.soft_fail }}"
-        SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
+        echo "[DEBUG] Environment variables:"
+        env | sort
+
+        # Prepare soft-fail argument
         SOFT_FAIL_ARG=""
         [ "$SOFT_FAIL" = "true" ] && SOFT_FAIL_ARG="--softfail"
 
-        # Skip Sonar scan argument
-        SKIP_SONAR_SCAN="${{ inputs.skip_sonar_scan }}"
-        SKIP_SONAR_SCAN="${SKIP_SONAR_SCAN//[$'\t\r\n ']}"
+        # Prepare skip-scan argument
         SCAN_SKIP_ARG=""
         [ "$SKIP_SONAR_SCAN" = "true" ] && SCAN_SKIP_ARG="--skip-sonar-scan"
 
@@ -161,25 +173,20 @@ runs:
         chmod +x $SCANNER
 
         # Auto-detect Git info if not provided
-        REPO_URL="${{ inputs.repo_url }}"
-        BRANCH="${{ inputs.branch }}"
-        COMMIT_SHA="${{ inputs.commit_sha }}"
-        PIPELINE_URL="${{ inputs.pipeline_url }}"
-
         [ -z "$REPO_URL" ] && REPO_URL="$GITHUB_REPOSITORY"
         [ -z "$BRANCH" ] && BRANCH="${GITHUB_REF#refs/heads/}"
         [ -z "$COMMIT_SHA" ] && COMMIT_SHA="$GITHUB_SHA"
         [ -z "$PIPELINE_URL" ] && PIPELINE_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
         # Build SonarQube command
-        CMD_ARGS="-Dsonar.projectKey=\"${{ inputs.sonar_project_key }}\" \
-        -Dsonar.login=\"${{ inputs.sonar_token }}\" \
-        -Dsonar.host.url=\"${{ inputs.sonar_host_url }}\" \
+        CMD_ARGS="-Dsonar.projectKey=$SONAR_PROJECT_KEY \
+        -Dsonar.login=$SONAR_TOKEN \
+        -Dsonar.host.url=$SONAR_HOST_URL \
         -Dsonar.qualitygate.wait=true"
 
-        [ -n "${{ inputs.sonar_org_id }}" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=\"${{ inputs.sonar_org_id }}\""
+        [ -n "$SONAR_ORG_ID" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=$SONAR_ORG_ID"
 
-        echo "[DEBUG] Running command:"
+        echo "[DEBUG] Running SQ-SAST scan:"
         echo "$SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG --command \"$CMD_ARGS\" --repo-url \"$REPO_URL\" --branch \"$BRANCH\" --commit-sha \"$COMMIT_SHA\" --pipeline-url \"$PIPELINE_URL\" --container-mode"
 
         $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG \
