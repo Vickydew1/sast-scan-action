@@ -152,42 +152,33 @@ runs:
         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
       run: |
+        run: |
         set -e
 
-        # Prepare soft-fail argument
+        # Softfail
         SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
         SOFT_FAIL_ARG=""
         [ "$SOFT_FAIL" = "true" ] && SOFT_FAIL_ARG="--softfail"
 
-        # Prepare skip-scan argument
+        # Skip scan
         SCAN_SKIP_ARG=""
         [ "$SKIP_SONAR_SCAN" = "true" ] && SCAN_SKIP_ARG="--skip-sonar-scan"
 
-        # Download AccuKnox ASPM Scanner
+        # Download scanner
         SCANNER="/tmp/accuknox-aspm-scanner"
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o $SCANNER
         chmod +x $SCANNER
 
-        # Auto-detect Git info if not provided
+        # Auto-detect git
         [ -z "$REPO_URL" ] && REPO_URL="$GITHUB_REPOSITORY"
         [ -z "$BRANCH" ] && BRANCH="${GITHUB_REF#refs/heads/}"
         [ -z "$COMMIT_SHA" ] && COMMIT_SHA="$GITHUB_SHA"
         [ -z "$PIPELINE_URL" ] && PIPELINE_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
-        # Build SonarQube command
-        CMD_ARGS="-Dsonar.projectKey=$SONAR_PROJECT_KEY \
-        -Dsonar.login=$SONAR_TOKEN \
-        -Dsonar.host.url=$SONAR_HOST_URL \
-        -Dsonar.qualitygate.wait=true"
+        # Build single-line SonarQube command
+        CMD_ARGS="-Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.login=$SONAR_TOKEN -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.qualitygate.wait=true"
         [ -n "$SONAR_ORG_ID" ] && CMD_ARGS="$CMD_ARGS -Dsonar.organization=$SONAR_ORG_ID"
 
-        # Run the scanner
+        # Run scanner
         echo "Running: $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG --command \"$CMD_ARGS\" --repo-url \"$REPO_URL\" --branch \"$BRANCH\" --commit-sha \"$COMMIT_SHA\" --pipeline-url \"$PIPELINE_URL\" --container-mode"
-        $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG \
-          --command "$CMD_ARGS" \
-          --repo-url "$REPO_URL" \
-          --branch "$BRANCH" \
-          --commit-sha "$COMMIT_SHA" \
-          --pipeline-url "$PIPELINE_URL" \
-          --container-mode
-
+        $SCANNER scan $SOFT_FAIL_ARG sq-sast $SCAN_SKIP_ARG --command "$CMD_ARGS" --repo-url "$REPO_URL" --branch "$BRANCH" --commit-sha "$COMMIT_SHA" --pipeline-url "$PIPELINE_URL" --container-mode
