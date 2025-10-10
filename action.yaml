@@ -118,10 +118,6 @@ inputs:
     description: "URL of the pipeline triggering this scan"
     required: false
     default: ""
-  base_command:
-    description: "Override base command for scan execution"
-    required: false
-    default: "docker"
   soft_fail:
     description: "Do not fail pipeline if issues are found"
     required: false
@@ -151,7 +147,6 @@ runs:
         BRANCH: ${{ inputs.branch }}
         COMMIT_SHA: ${{ inputs.commit_sha }}
         PIPELINE_URL: ${{ inputs.pipeline_url }}
-        BASE_COMMAND: ${{ inputs.base_command }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
         ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
@@ -194,5 +189,4 @@ runs:
           --branch "$BRANCH" \
           --commit-sha "$COMMIT_SHA" \
           --pipeline-url "$PIPELINE_URL" \
-          --base-command "$BASE_COMMAND" \
           --container-mode
