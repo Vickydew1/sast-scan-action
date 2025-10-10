@@ -151,6 +151,7 @@ runs:
         ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
+        DEBUG: "TRUE"
       run: |
         set -e
 
