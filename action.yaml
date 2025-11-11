@@ -81,6 +81,7 @@ runs:
           SKIP_FLAG="--skip-sonar-scan"
         fi
         
+        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG sq-sast $SKIP_FLAG \
         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG sq-sast $SKIP_FLAG \
           --command "$CMD_ARGS" \
           --repo-url "$GITHUB_REPOSITORY" \
