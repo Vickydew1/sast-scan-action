@@ -53,7 +53,7 @@ runs:
         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
 
       run: |
-        echo "🔹 Starting AccuKnox SQ-SAST Scan..."
+        echo "Starting AccuKnox SQ-SAST Scan..."
 
         # Normalise soft fail flag
         SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
